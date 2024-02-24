@@ -1,13 +1,15 @@
 <?php 
+    // Start a new session and include the database connection file
     session_start();
     require_once("db_connection.php");
 
+    // Redirect to the login page if the user is not logged in
     if(!isset($_SESSION['login'])){
         header('Location: auth/login.php');
         exit();
     }
 
-    //SESSION
+    // Initialize session variables to store messages and user information
     $editMessage = $_SESSION['edit-message'] ?? "";
     $consumeMessage = $_SESSION['consume-message'] ?? "";
     $delMessage = $_SESSION["del-message"] ?? "";
@@ -15,10 +17,11 @@
     $paymentMessage = $_SESSION["payment-message"] ?? "";
     $username = $_SESSION['user'] ?? "";
 
-    // Get client information
+    // Get the client ID from the GET parameters and store it in the session
     $client_id = $_GET['btn-client'] ?? "";
     $_SESSION['passID'] = $client_id;
 
+    // Retrieve client information from the database based on the client ID
     $profile = mysqli_query($conn,"SELECT * FROM client WHERE id='$client_id'");
     if(mysqli_num_rows($profile) > 0){
         while($row_id = mysqli_fetch_assoc($profile)){
@@ -26,7 +29,7 @@
         }
     }
 
-    //Get Cubic Price      
+    // Retrieve the cubic price from the database
     $cubic_price = mysqli_query($conn,"SELECT * FROM cu_price");
     if(mysqli_num_rows($cubic_price) > 0){
         while($row_price = mysqli_fetch_assoc($cubic_price)){
@@ -34,7 +37,7 @@
         }
     }  
 
-    // Get client payment status per month
+    // Retrieve the payment status for the client per month
     $pay_status = mysqli_query($conn,"SELECT * FROM payment_status WHERE unique_id='$unique_id'");
     if(mysqli_num_rows($pay_status) > 0){
         while($row_status = mysqli_fetch_assoc($pay_status)){
@@ -42,6 +45,7 @@
         }
     }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -59,97 +63,135 @@
     <title>Water Billing</title>
 </head>
 <body>
-    <div class="sidebar"> <!-- Navigation Bar -->
+    <div class="sidebar"> 
+        <!-- Logo and Menu Button Section -->
         <div class="logo_content">
-            <div class="logo">
-                <i class="bx bx-droplet"></i>
-                <div class="logo_name">Water Data</div>
-            </div>
-            <i class="bx bx-menu" id="btn"></i>
-        </div>
-
-        <ul class="nav_list">
-            <li>
-                <a href="index.php">
-                <i class="bx bx-grid-alt"></i>
-                <span class="links_name">Dashboard</span>
-                </a>
-            </li>
-        
-            <li>
-                <a href="clients.php" class="active">
-                <i class='bx bx-user'></i>
-                <span class="links_name">User</span>
-                </a>
-            </li>
-        
-            <li>
-                <a href="history.php">
-                <i class='bx bx-history'></i>
-                <span class="links_name">History</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="setting.php">
-                <i class='bx bx-cog'></i>
-                <span class="links_name">Setting</span>
-                </a>
-            </li>
-        </ul>
-
-        <div class="profile_content">
-            <div class="profile">
-                <div class="profile_details"> <!-- Profile Picture -->
-                    <div class="name_job">
-                    <div class="name"><?php echo $username; ?></div>
-                        <div class="job">Administrator</div>
-                    </div>
+                <!-- Logo -->
+                <div class="logo">
+                    <i class="bx bx-droplet"></i>
+                    <div class="logo_name">Water Data</div>
                 </div>
-                <form action="auth/logout.php">
-                    <button type="submit"><i class='bx bx-log-out' id="log_out" title="Logout"></i></button>
-                </form>
+                <!-- Menu Button -->
+                <i class="bx bx-menu" id="btn"></i>
             </div>
-        </div>
+
+            <!-- Navigation Links -->
+            <ul class="nav_list">
+                <!-- Dashboard Link -->
+                <li>
+                    <a href="index.php">
+                        <i class="bx bx-grid-alt"></i>
+                        <span class="links_name">Dashboard</span>
+                    </a>
+                </li>
+
+                <!-- Clients Link -->
+                <li>
+                    <a href="clients.php" class="active">
+                        <i class='bx bx-user'></i>
+                        <span class="links_name">User</span>
+                    </a>
+                </li>
+
+                <!-- History Link -->
+                <li>
+                    <a href="history.php">
+                        <i class='bx bx-history'></i>
+                        <span class="links_name">History</span>
+                    </a>
+                </li>
+
+                <!-- Setting Link -->
+                <li>
+                    <a href="setting.php">
+                        <i class='bx bx-cog'></i>
+                        <span class="links_name">Setting</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- User Profile Section -->
+            <div class="profile_content">
+                <div class="profile">
+                    <!-- User Details -->
+                    <div class="profile_details">
+                        <div class="name_job">
+                            <div class="name"><?php echo $username; ?></div>
+                            <div class="job">Administrator</div>
+                        </div>
+                    </div>
+                    <!-- Logout Button -->
+                    <form action="auth/logout.php">
+                        <button type="submit"><i class='bx bx-log-out' id="log_out" title="Logout"></i></button>
+                    </form>
+                </div>
+            </div>
     </div>
 
     <div class="home_content">
         <div class="info-container">
             <div style="display: flex; height: 100%;">
-                <divs class="client-profile">
+                <!-- Client profile container -->
+                <div class="client-profile">
+
+                    <!-- Search box section -->
                     <div style="width: 85%; margin: 15px;" class="search-box">
                         <div style="display: flex;">
+                            <!-- Search icon -->
                             <i class='bx bx-search search-icon'></i>
-                            <input type="text" autocomplete="off" placeholder="Search Profile"> <!-- LIVE Search Bar -->
+                            
+                            <!-- Search input -->
+                            <input type="text" autocomplete="off" placeholder="Search Profile">
+                            
+                            <!-- Search result display area -->
                             <div style="width: 100%;" class="result"></div>
                         </div>
                     </div>
+
+                    <!-- Profile form -->
                     <form method="GET">
+
+                        <!-- Profile image display area -->
                         <div class="profile-img"></div>
                         <br>
+
+                        <!-- Displaying client name -->
                         <p><b><?php echo $name ?></b></p>
+
+                        <!-- Displaying client contact number -->
                         <p><i class='bx bxs-phone'></i>
-                            <?php //Display Contact Number
-                                if(empty($contact)) {
-                                    echo "Not Available";
-                                }else{
-                                    echo $contact;
-                                }
-                            ?>
-                        <p><i class='bx bxs-location-plus' ></i>
-                            <?php //Display Address
-                                if(empty($address)) {
-                                    echo "Not Available";
-                                }else{
-                                    echo $address;
-                                }
+                            <?php
+                            // Check if contact number is available
+                            if(empty($contact)) {
+                                echo "Not Available";
+                            } else {
+                                echo $contact;
+                            }
                             ?>
                         </p>
+
+                        <!-- Displaying client address -->
+                        <p><i class='bx bxs-location-plus' ></i>
+                            <?php
+                            // Check if address is available
+                            if(empty($address)) {
+                                echo "Not Available";
+                            } else {
+                                echo $address;
+                            }
+                            ?>
+                        </p>
+
+                        <!-- Button to edit client information -->
                         <button style="background-color: #b3b3ff;" type="button" class="btn btn-info" data-toggle="modal" data-target="#editClient" title="Edit"><i class='bx bx-edit'></i></button>
+
+                        <!-- Button to delete client information -->
                         <button style="background-color: #ff8080;" type="button" class="btn btn-info" data-toggle="modal" data-target="#deleteClient" title="Delete"><i class='bx bx-trash' ></i></button>
+
+                        <!-- Button to initiate payment -->
                         <button type="button" class="btn btn-success" data-toggle="modal" data-target="#payConsume" title="Pay">Pay</button>
                     </form>
-                </divs>
+                </div>
 
                 <!-- MODAL FOR PAYMENT -->
                 <div class="modal fade" id="payConsume" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -1024,6 +1066,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="js/script.js"></script>
 
     <script>
@@ -1034,18 +1077,8 @@
                 datasets: [
                     {
                     label: "Cubic Meter",
-                    backgroundColor: [
-                        "#3e95cd", 
-                        "#8e5ea2",
-                        "#3cba9f",
-                        "#e8c3b9",
-                        "#c45850",
-                        "#3e95cd", 
-                        "#8e5ea2",
-                        "#3cba9f",
-                        "#e8c3b9",
-                        "#3e95cd"
-                    ],
+                    backgroundColor: "#3e95cd",
+                    borderColor: "#3e95cd",
                     data: [
                             <?php echo $january; ?>,
                             <?php echo $february; ?>,
